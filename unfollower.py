@@ -5,19 +5,24 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.binary_location = '/PATH/TO/Google Chrome'
-chrome_webdriver_path = '/PATH/TO/chromedriver'
+chrome_options.add_argument("--headless")
+chrome_options.binary_location = os.getenv('BINARY_LOCATION')
+chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
 driver = webdriver.Chrome(chrome_webdriver_path, options=chrome_options)
 
 # constants
 auth = {
-  'username': '',
-  'password': ''
+  'username': os.getenv('USERNAME'),
+  'password': os.getenv('PASSWORD')
 }
-unfollow_count = 150
+unfollow_count = os.getenv('UNFOLLOW_COUNT')
 
 # init
 driver.get('https://www.instagram.com')
@@ -54,6 +59,7 @@ driver.get('https://www.instagram.com/' + auth['username'] + '/')
 try:
   myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, '//a[@href="/' + auth['username'] + '/following/"]')))
 except TimeoutException:
+  print('Loading took too much time, quitting!')
   driver.quit()
 
 following_modal_toggle = driver.find_element_by_xpath('//a[@href="/' + auth['username'] + '/following/"]')
@@ -62,11 +68,11 @@ following_modal_toggle.click()
 try:
   myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, '//div[@role="dialog"]//ul')))
 except TimeoutException:
+  print('Loading took too much time, quitting!')
   driver.quit()
 
-following_modal = driver.find_element_by_xpath('//div[@role="dialog"]')
 following_modal_content = driver.find_element_by_xpath('//div[@role="dialog"]/div/div[last()]')
-for i in range(20):
+for i in range(10):
   driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', following_modal_content)
   time.sleep(1)
 
