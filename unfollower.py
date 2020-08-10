@@ -1,12 +1,13 @@
 import time
+from datetime import datetime
+from dotenv import load_dotenv
+import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
@@ -22,7 +23,11 @@ auth = {
   'username': os.getenv('USERNAME'),
   'password': os.getenv('PASSWORD')
 }
-unfollow_count = os.getenv('UNFOLLOW_COUNT')
+unfollow_count = int(os.getenv('UNFOLLOW_COUNT'))
+
+# load activity-log
+with open('activity-log.txt', 'r') as activity_log_file:
+  activity_log = activity_log_file.read().splitlines()
 
 # init
 driver.get('https://www.instagram.com')
@@ -77,17 +82,31 @@ for i in range(10):
   time.sleep(1)
 
 # unfollow
+unfollowed_users = []
 cursor = 0
 unfollow_buttons = driver.find_elements_by_xpath("//button[contains(., 'Following')]")
 while(cursor < unfollow_count):
   unfollow_buttons[cursor].click()
+
   time.sleep(0.5)
+
+  unfollowed_user = unfollow_buttons[cursor].find_element_by_xpath(".//../../div/div[2]/div/span/a").text
+  unfollowed_users.append(unfollowed_user)
+
   try:
     myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, '//button[contains(., "Unfollow")][1]')))
     confirm_button = driver.find_element_by_xpath("//button[contains(., 'Unfollow')][1]")
     confirm_button.click()
   except TimeoutException:
     print('Oops, taking a long time')
+
   cursor += 1
   time.sleep(1)
+
+# log new activity
+current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+with open('activity-log.txt', 'a') as activity_log_file:
+  for unfollowed_user in unfollowed_users:
+    activity_log_file.write(f'unfollow {unfollowed_user} {current_date}\n')
+
 driver.quit()
