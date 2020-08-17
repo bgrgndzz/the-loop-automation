@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# repo
+activity-log.txt
+follow-list.txt

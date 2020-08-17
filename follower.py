@@ -12,7 +12,7 @@ from selenium.common.exceptions import TimeoutException
 load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
@@ -71,6 +71,7 @@ followed_count = 0
 follow_list_cursor = 0
 while followed_count != follow_count and follow_list_cursor != len(follow_list):
   driver.get(follow_list[follow_list_cursor])
+  time.sleep(5)
 
   try:
     myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Liked by')]/button")))
@@ -98,11 +99,19 @@ while followed_count != follow_count and follow_list_cursor != len(follow_list):
     print('Loading took too much time, quitting!')
     driver.quit()
 
-  while(followed_count < follow_count):
-    follow_button = driver.find_element_by_xpath("//div[@role='dialog']//button[text()='Follow']")
-    follow_button.click()
-
+  cursor = 0
+  skipped = 0
+  follow_buttons = driver.find_elements_by_xpath("//div[@role='dialog']//button[text()='Follow']")
+  while(followed_count < follow_count and cursor != len(follow_buttons) - 1 - skipped):
+    follow_button = follow_buttons[cursor]
     followed_user = follow_button.find_element_by_xpath(".//../../div[2]//span/a").text
+    cursor += 1
+
+    if any(followed_user in log for log in activity_log):
+      skipped += 1
+      continue
+
+    follow_button.click()
     followed_users.append(followed_user)
 
     time.sleep(1.5)

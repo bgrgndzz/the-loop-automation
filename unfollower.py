@@ -12,7 +12,7 @@ from selenium.common.exceptions import TimeoutException
 load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
@@ -24,10 +24,13 @@ auth = {
   'password': os.getenv('PASSWORD')
 }
 unfollow_count = int(os.getenv('UNFOLLOW_COUNT'))
+unfollow_timeout = int(os.getenv('UNFOLLOW_TIMEOUT'))
 
 # load activity-log
 with open('activity-log.txt', 'r') as activity_log_file:
   activity_log = activity_log_file.read().splitlines()
+
+unfollow_blacklist = [log.split()[1] for log in activity_log if log.split()[0] == 'follow' and (datetime.utcnow() - datetime.strptime(log.split()[2], '%Y-%m-%dT%H:%M:%SZ')).days < unfollow_timeout + 1]
 
 # init
 driver.get('https://www.instagram.com')
@@ -86,11 +89,13 @@ unfollowed_users = []
 cursor = 0
 unfollow_buttons = driver.find_elements_by_xpath("//button[contains(., 'Following')]")
 while(cursor < unfollow_count):
-  unfollow_buttons[cursor].click()
-
-  time.sleep(0.5)
-
   unfollowed_user = unfollow_buttons[cursor].find_element_by_xpath(".//../../div/div[2]/div/span/a").text
+  cursor += 1
+  if unfollowed_user in unfollow_blacklist:
+    continue
+
+  unfollow_buttons[cursor].click()
+  time.sleep(0.5)
   unfollowed_users.append(unfollowed_user)
 
   try:
@@ -100,7 +105,6 @@ while(cursor < unfollow_count):
   except TimeoutException:
     print('Oops, taking a long time')
 
-  cursor += 1
   time.sleep(1)
 
 # log new activity
