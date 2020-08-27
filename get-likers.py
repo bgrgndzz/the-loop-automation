@@ -35,7 +35,7 @@ if len(sys.argv) == 1:
   driver.quit()
 
 # load activity-log
-with open('activity-log.txt', 'r') as activity_log_file:
+with open('./activity-log.txt', 'r') as activity_log_file:
   activity_log = activity_log_file.read().splitlines()
 
 # init
@@ -114,7 +114,7 @@ for post in sys.argv[1:]:
     driver.execute_script('arguments[0].scrollTop = arguments[0].scrollTop + 500', likedby_modal_content)
 
 # save likers
-with open('follow-list.txt', 'a') as follow_list_file:
+with open('./follow-list.txt', 'a') as follow_list_file:
   for liker in likers:
     follow_list_file.write(f'{liker}\n')
 

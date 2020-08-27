@@ -30,7 +30,7 @@ unfollow_count = int(os.getenv('UNFOLLOW_COUNT'))
 unfollow_timeout = int(os.getenv('UNFOLLOW_TIMEOUT'))
 
 # load activity-log
-with open('activity-log.txt', 'r') as activity_log_file:
+with open('./activity-log.txt', 'r') as activity_log_file:
   activity_log = activity_log_file.read().splitlines()
 
 unfollow_blacklist = [log.split()[1] for log in activity_log if log.split()[0] == 'follow' and (datetime.utcnow() - datetime.strptime(log.split()[2], '%Y-%m-%dT%H:%M:%SZ')).days < unfollow_timeout + 1]
@@ -112,7 +112,7 @@ while(cursor < unfollow_count):
 
 # log new activity
 current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-with open('activity-log.txt', 'a') as activity_log_file:
+with open('./activity-log.txt', 'a') as activity_log_file:
   for unfollowed_user in unfollowed_users:
     activity_log_file.write(f'unfollow {unfollowed_user} {current_date}\n')
 

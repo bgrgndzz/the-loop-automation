@@ -29,14 +29,14 @@ auth = {
 follow_count = int(os.getenv('FOLLOW_COUNT'))
 
 # load follow-list
-with open('follow-list.txt', 'r') as follow_list_file:
+with open('./follow-list.txt', 'r') as follow_list_file:
   follow_list = follow_list_file.read().splitlines()
   if len(follow_list) == 0:
     print('Empty follow list, quitting...')
     driver.quit()
 
 # load activity-log
-with open('activity-log.txt', 'r') as activity_log_file:
+with open('./activity-log.txt', 'r') as activity_log_file:
   activity_log = activity_log_file.read().splitlines()
 
 # init
@@ -99,11 +99,11 @@ for i in range(len(follow_list)):
 
 # log new activity
 current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-with open('activity-log.txt', 'a') as activity_log_file:
+with open('./activity-log.txt', 'a') as activity_log_file:
   for followed_user in followed_users:
     activity_log_file.write(f'follow {followed_user} {current_date}\n')
 
-with open('follow-list.txt', 'w') as follow_list_file:
+with open('./follow-list.txt', 'w') as follow_list_file:
   iterations = len(followed_users) + skipped
   if len(follow_list) > iterations:
     for follow_user in follow_list[iterations:]:
