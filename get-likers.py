@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import sys
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -28,12 +29,10 @@ auth = {
 }
 follow_count = int(os.getenv('FOLLOW_COUNT'))
 
-# load follow-list
-with open('follow-list.txt', 'r') as follow_list_file:
-  follow_list = follow_list_file.read().splitlines()
-  if len(follow_list) == 0:
-    print('Empty follow list, quitting...')
-    driver.quit()
+# load arguments
+if len(sys.argv) == 1:
+  print('Empty argument list, quitting!')
+  driver.quit()
 
 # load activity-log
 with open('activity-log.txt', 'r') as activity_log_file:
@@ -68,45 +67,55 @@ try:
 except TimeoutException:
   print('Loading took too much time, skipping!')
 
-# follow
-followed_users = []
-skipped = 0
-
-for i in range(len(follow_list)):
-  followed_user = follow_list[i]
-
-  if any(followed_user in log for log in activity_log):
-    skipped += 1
-    continue
-
-  driver.get(f'https://www.instagram.com/{followed_user}')
+# load likers
+likers = []
+for post in sys.argv[1:]:
+  driver.get(post)
+  time.sleep(5)
 
   try:
-    myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[text()='Follow']")))
+    myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Liked by')]/button")))
+    likers_toggle = driver.find_element_by_xpath("//*[contains(text(), 'Liked by')]/button")
+    likers_toggle.click()
   except TimeoutException:
-    skipped += 1
-    continue
+    print('Loading took too much time, quitting!')
+    driver.quit()
 
-  follow_button = driver.find_element_by_xpath('//button[text()="Follow"]')
-  follow_button.click()
+  try:
+    myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, '//div[@role="dialog"]/div/div[last()]/div')))
+  except TimeoutException:
+    print('Loading took too much time, quitting!')
+    driver.quit()
 
-  followed_users.append(followed_user)
+  likedby_modal_content = driver.find_element_by_xpath('//div[@role="dialog"]/div/div[last()]/div')
 
-  if len(followed_users) == follow_count:
-    break
+  try:
+    myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']//button[text()='Follow']")))
+  except TimeoutException:
+    print('Loading took too much time, quitting!')
+    driver.quit()
 
-  time.sleep(1.5)
+  follow_buttons = []
 
-# log new activity
-current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-with open('activity-log.txt', 'a') as activity_log_file:
-  for followed_user in followed_users:
-    activity_log_file.write(f'follow {followed_user} {current_date}\n')
+  while True:
+    new_follow_buttons = driver.find_elements_by_xpath(f"//div[@role='dialog']//button[text()='Follow']")
+    if len(follow_buttons) != 0 and new_follow_buttons[-1] == follow_buttons[-1]:
+      break
+    follow_buttons = new_follow_buttons
 
-with open('follow-list.txt', 'w') as follow_list_file:
-  iterations = len(followed_users) + skipped
-  if len(follow_list) > iterations:
-    for follow_user in follow_list[iterations:]:
-      follow_list_file.write(f'{follow_user}\n')
+    for follow_button in follow_buttons:
+      liker = follow_button.find_element_by_xpath(".//../../div[2]//span/a").text
+
+      if any(liker in log for log in activity_log) or liker in likers:
+        continue
+
+      likers.append(liker)
+
+    driver.execute_script('arguments[0].scrollTop = arguments[0].scrollTop + 500', likedby_modal_content)
+
+# save likers
+with open('follow-list.txt', 'a') as follow_list_file:
+  for liker in likers:
+    follow_list_file.write(f'{liker}\n')
 
 driver.quit()
