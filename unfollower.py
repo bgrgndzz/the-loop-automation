@@ -12,10 +12,10 @@ from selenium.common.exceptions import TimeoutException
 load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-#chrome_options.add_argument('--disable-extensions')
-#chrome_options.add_argument('--headless')
-#chrome_options.add_argument('--disable-gpu')
-#chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-extensions')
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('--no-sandbox')
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
