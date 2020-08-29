@@ -13,10 +13,10 @@ from selenium.common.exceptions import TimeoutException
 load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--disable-extensions')
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--disable-gpu')
-chrome_options.add_argument('--no-sandbox')
+#chrome_options.add_argument('--disable-extensions')
+#chrome_options.add_argument('--headless')
+#chrome_options.add_argument('--disable-gpu')
+#chrome_options.add_argument('--no-sandbox')
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
@@ -97,9 +97,16 @@ for post in sys.argv[1:]:
 
   follow_buttons = []
 
+  retry = 5
+
   while True:
     new_follow_buttons = driver.find_elements_by_xpath(f"//div[@role='dialog']//button[text()='Follow']")
     if len(follow_buttons) != 0 and new_follow_buttons[-1] == follow_buttons[-1]:
+      if retry > 0:
+        retry -= 1
+        driver.execute_script('arguments[0].scrollTop = arguments[0].scrollTop + 500', likedby_modal_content)
+        time.sleep(1)
+        continue
       break
     follow_buttons = new_follow_buttons
 
@@ -112,6 +119,7 @@ for post in sys.argv[1:]:
       likers.append(liker)
 
     driver.execute_script('arguments[0].scrollTop = arguments[0].scrollTop + 500', likedby_modal_content)
+    time.sleep(1)
 
 # save likers
 with open('./follow-list.txt', 'a') as follow_list_file:
