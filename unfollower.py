@@ -12,10 +12,10 @@ from selenium.common.exceptions import TimeoutException
 load_dotenv()
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--disable-extensions')
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--disable-gpu')
-chrome_options.add_argument('--no-sandbox')
+#chrome_options.add_argument('--disable-extensions')
+#chrome_options.add_argument('--headless')
+#chrome_options.add_argument('--disable-gpu')
+#chrome_options.add_argument('--no-sandbox')
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
@@ -83,7 +83,7 @@ except TimeoutException:
   driver.quit()
 
 following_modal_content = driver.find_element_by_xpath('//div[@role="dialog"]/div/div[last()]')
-for i in range(10):
+for i in range(40):
   driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', following_modal_content)
   time.sleep(1)
 
@@ -91,7 +91,7 @@ for i in range(10):
 unfollowed_users = []
 cursor = 0
 unfollow_buttons = driver.find_elements_by_xpath("//button[contains(., 'Following')]")
-while(cursor < unfollow_count):
+while(len(unfollowed_users) < unfollow_count):
   unfollowed_user = unfollow_buttons[cursor].find_element_by_xpath(".//../../div/div[2]/div/span/a").text
   cursor += 1
   if unfollowed_user in unfollow_blacklist:
