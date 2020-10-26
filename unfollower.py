@@ -16,6 +16,7 @@ chrome_options.add_argument('--disable-extensions')
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage') # prevents "WebDriverException: unknown error: DevToolsActivePort file doesn't exist"
 chrome_options.binary_location = os.getenv('BINARY_LOCATION')
 chrome_webdriver_path = os.getenv('WEBDRIVER_PATH')
 
@@ -83,7 +84,7 @@ except TimeoutException:
   driver.quit()
 
 following_modal_content = driver.find_element_by_xpath('//div[@role="dialog"]/div/div[last()]')
-for i in range(40):
+for i in range(10): # number may change
   driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', following_modal_content)
   time.sleep(1)
 
@@ -93,18 +94,19 @@ cursor = 0
 unfollow_buttons = driver.find_elements_by_xpath("//button[contains(., 'Following')]")
 while(len(unfollowed_users) < unfollow_count):
   unfollowed_user = unfollow_buttons[cursor].find_element_by_xpath(".//../../div/div[2]/div/span/a").text
-  cursor += 1
+
   if unfollowed_user in unfollow_blacklist:
     continue
 
-  unfollow_buttons[cursor].click()
+  driver.execute_script("arguments[0].click();", unfollow_buttons[cursor])
+  cursor += 1
   time.sleep(0.5)
   unfollowed_users.append(unfollowed_user)
 
   try:
     myElem = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, '//button[contains(., "Unfollow")][1]')))
     confirm_button = driver.find_element_by_xpath("//button[contains(., 'Unfollow')][1]")
-    confirm_button.click()
+    driver.execute_script("arguments[0].click();", confirm_button)
   except TimeoutException:
     print('Oops, taking a long time')
 
